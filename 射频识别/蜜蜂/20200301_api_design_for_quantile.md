@@ -1,4 +1,4 @@
-# paddle.Tensor.quantile 设计文档
+# paddle.Tensor.quantile 啦啦啦啦啦
 
 |API名称 | paddle.Tensor.quantile | 
 |---|---|
