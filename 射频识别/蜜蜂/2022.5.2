@@ -1,76 +1,444 @@
 # 1、任务描述：
 
-	飞桨框架于 2.0 正式版全面支持了动态图训练，并在2.1、2.2 两个大版本中不断完善分布式能力，同时大幅增强了训练功能。在本任务中，我们希望能收到你对于飞桨动态图分布式训练功能的使用感受，可以与其他深度学习框架做功能对比，并产出一份对应的评估报告。
+	飞桨框架于 2.0 正式版之后正式发布了动静转换@to_static功能，并在2.1、2.2 两个大版本中不断新增了各项功能，以及详细的使用文档和最佳实践教程（以图搜图）。在本任务中，我们希望你全面体验飞桨的动静转换@to_static功能，即参考飞桨官网 -> 使用指南 -> 动态图转静态 下的内容，体验动转静模型导出、动转静训练等功能，产出一份整体功能体验报告。
 
 # 2、环境配置：
 
-	因为需要将飞桨paddlepaddle框架的分布式与其他深度学习框架做功能对比，这里其他深度学习框架我选择了pytorch框架，所以首先需要安装飞桨paddlepaddle框架与pytorch框架，开发平台选择了曙光平台昆山超算。
+	因为需要体验飞桨paddlepaddle框架的动转静模型导出、动转静训练等功能，所以首先需要安装飞桨paddlepaddle框架，运行环境使用pycharm和anaconda。所以在进行PaddlePaddle安装之前应确保Anaconda软件环境已经正确安装。软件下载和安装参见Anaconda官网(https://www.anaconda.com/)。在已经正确安装Anaconda的情况下请按照下列步骤安装PaddlePaddle。
 
-## 2.1、pytorch环境配置：
+-Windows 7/8/10 专业版/企业版 (64bit)
 
-- 1、首先安装anaconda
+-GPU版本支持CUDA 10.1/10.2/11.2，且仅支持单卡
+
+-conda 版本 4.8.3+ (64 bit)
+
+## 2.1、创建虚拟环境：
+
+- 1、安装环境
+	首先根据具体的Python版本创建Anaconda虚拟环境，PaddlePaddle的Anaconda安装支持以下四种Python安装环境。
+如果您想使用的python版本为3.6:
 ```python
-bash Anaconda3-2020.07-Linux-x86_64.sh –u
+conda create -n paddle_env python=3.6
 ```
-- 2、创建一个属于自己的环境并激活
+如果您想使用的python版本为3.7:
 ```python
-conda create --name pytorch_1.9 python=3.7
-conda activate pytorch-1.9
-```
-- 3、安装pytorch-1.9（适配rocm-4.0.1及以上）PyTorch1.8和PyTorch1.9安装wheel包在公共目录：
+	conda create -n paddle_env python=3.7
+```	
+如果您想使用的python版本为3.8:
 ```python
-/public/software/apps/DeepLearning/whl/rocm-4.0.1/
+conda create -n paddle_env python=3.8
 ```
-- 安装指令如下：
+如果您想使用的python版本为3.9:
 ```python
-module rm compiler/rocm/2.9
-module load compiler/rocm/4.0.1
-pip install /public/software/apps/DeepLearning/whl/rocm-4.0.1/torch-1.9.0+rocm4.0.1-cp36-cp36m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple/
-```
-- 对于torchverion的安装不能按照曙光官方帮助文档给定的方法来，否则torchvision在运行自定义算子时会出现错误，所以需要使用源码安装的方式，安装方法如下:
+conda create -n paddle_env python=3.9
+```	
+本实验使用python版本为3.9,虚拟环境命名为paddlepaddle-gpu，即：
 ```python
-1、本地下载对应的torchvision分支源码包：https://github.com/pytorch/vision上传集群，
-2、进入对应的conda环境，加载对应的rocm（这里rocm4.0.1）版本；
-3、conda install libpng -y 
-4、conda install jpeg -y 
-5、pip3 install numpy pillow matplotlib ninja -i https://pypi.tuna.tsinghua.edu.cn/simple/ 
-6、使用salloc申请计算结点，使用ssh登录至计算节点，并进入对应的conda环境加载rocm（这里rocm4.0.1），执行编译：CC=clang CXX=clang++ python setup.py install
+conda create -n paddlepaddle-gpu python=3.9
+```	
+- 2、进入Anaconda虚拟环境
+```python
+activate paddlepaddle-gpu
 ```
+- 3、开始安装
+GPU版的PaddlePaddle
+本实验为 CUDA 10.2，需要搭配cuDNN 7 (cuDNN>=7.6.5, 多卡环境下 NCCL>=2.7)
+添加清华源（可选），对于国内用户无法连接到Anaconda官方源的可以按照以下命令添加清华源:
+```python
+conda install paddlepaddle-gpu==2.2.2 cudatoolkit=10.2 --channel https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle/
+```
+您可参考NVIDIA官方文档了解CUDA和CUDNN的安装流程和配置方法。
+- 4、验证安装
+安装完成后您可以使用 python 或 python3 进入python解释器，输入import paddle ，再输入 paddle.utils.run_check()
+
+如果出现PaddlePaddle is installed successfully!，说明您已成功安装。
 
 ## 2.2、paddlepaddle环境配置：
-
-- Paddlepaddle的环境在曙光超算上需要使用镜像的方式进行安装，镜像添加，源镜像名称填：paddlepaddle/paddle，源镜像标签填：latest-dev-rocm4.0-miopen2.11。然后创建实例打开容器。因为Docker容器中不能连接网络，使用paddle官网给出的安装方式会出现网络连接的错误。
 ```python
-python -m pip install paddlepaddle-rocm==2.2.2.rocm401.miopen211 -f https://www.paddlepaddle.org.cn/whl/rocm/stable.whl
+import paddle
+import paddle.nn.functional as F
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+from PIL import Image
+from collections import defaultdict
+
+print(paddle.__version__)
 ```
-- 故需要提前下载whl文件，下载链接如下，下载的版本为paddlepaddle_rocm-2.1.1.rocm401.miopen211-cp37-cp37m-linux_x86_64.whl。下载链接：
+2.2.2
 
-https://www.paddlepaddle.org.cn/whl/rocm/stable.whl	
+# 3、数据加载：
 
-- 安装指令为
+## 3.1、数据集介绍
+
+本示例采用 CIFAR-10 数据集。
+CIFAR-10 和 CIFAR-100 是8000 万个微小图像数据集的标记子集。它们由 Alex Krizhevsky、Vinod Nair 和 Geoffrey Hinton 收集。
+数据集分为五个训练批次和一个测试批次，每个批次有 10000 张图像。测试批次恰好包含来自每个类别的 1000 个随机选择的图像。训练批次包含随机顺序的剩余图像，但一些训练批次可能包含来自一个类的图像多于另一个。在它们之间，训练批次恰好包含来自每个类别的 5000 张图像。
+以下是数据集中的类：
+飞机										
+汽车										
+鸟										
+猫										
+鹿										
+狗										
+青蛙										
+马										
+船										
+卡车										
+这些类是完全互斥的。汽车和卡车之间没有重叠。“汽车”包括轿车、SUV 之类的东西。“卡车”只包括大卡车。两者都不包括皮卡车。
+数据集下载网址为：https://www.cs.toronto.edu/~kriz/cifar.html
 ```python
-pip install paddlepaddle_rocm-2.1.1.rocm401.miopen211-cp37-cp37m-linux_x86_64.whl
+import paddle.vision.transforms as T
+
+transform = T.Compose([T.Transpose((2, 0, 1))])
+
+cifar10_train = paddle.vision.datasets.Cifar10(mode='train', transform=transform)
+x_train = np.zeros((50000, 3, 32, 32))
+y_train = np.zeros((50000, 1), dtype='int32')
+
+for i in range(len(cifar10_train)):
+    train_image, train_label = cifar10_train[i]
+    
+    # normalize the data
+    x_train[i,:, :, :] = train_image / 255.
+    y_train[i, 0] = train_label
+
+y_train = np.squeeze(y_train)
+
+cifar10_test = paddle.vision.datasets.cifar.Cifar10(mode='test', transform=transform)
+x_test = np.zeros((10000, 3, 32, 32), dtype='float32')
+y_test = np.zeros((10000, 1), dtype='int64')
+
+for i in range(len(cifar10_test)):
+    test_image, test_label = cifar10_test[i]
+   
+    # normalize the data
+    x_test[i,:, :, :] = test_image / 255.
+    y_test[i, 0] = test_label
+
+y_test = np.squeeze(y_test)
+
+height_width = 32
+
+def show_collage(examples):
+    box_size = height_width + 2
+    num_rows, num_cols = examples.shape[:2]
+
+    collage = Image.new(
+        mode="RGB",
+        size=(num_cols * box_size, num_rows * box_size),
+        color=(255, 255, 255),
+    )
+    for row_idx in range(num_rows):
+        for col_idx in range(num_cols):
+            array = (np.array(examples[row_idx, col_idx]) * 255).astype(np.uint8)
+            array = array.transpose(1,2,0)
+            collage.paste(
+                Image.fromarray(array), (col_idx * box_size, row_idx * box_size)
+            )
+
+    collage = collage.resize((2 * num_cols * box_size, 2 * num_rows * box_size))
+    return collage
+
+sample_idxs = np.random.randint(0, 50000, size=(5, 5))
+examples = x_train[sample_idxs]
+show_collage(examples)
 ```
-- 期间所需要的其他库都需要通过在曙光超算上通过EShell进行安装，需要设定清华镜像源，例如
+## 3.2、构建训练数据
+
+图片检索的模型的训练样本跟常见的分类任务的训练样本不太一样的地方在于，每个训练样本并不是一个(image, class)这样的形式。而是（image0, image1, similary_or_not)的形式，即，每
+
+一个训练样本由两张图片组成，而其label是这两张图片是否相似的标志位（0或者1）。
+
+很自然的能够想到，来自同一个类别的两张图片，是相似的图片，而来自不同类别的两张图片，应该是不相似的图片。
+
+为了能够方便的抽样出相似图片（以及不相似图片）的样本，先建立能够根据类别找到该类别下所有图片的索引。
 ```python
-pip install six -i https://pypi.tuna.tsinghua.edu.cn/simple
+class_idx_to_train_idxs = defaultdict(list)
+for y_train_idx, y in enumerate(y_train):
+    class_idx_to_train_idxs[y].append(y_train_idx)
+
+class_idx_to_test_idxs = defaultdict(list)
+for y_test_idx, y in enumerate(y_test):
+    class_idx_to_test_idxs[y].append(y_test_idx)
+
+num_classes = 10
+
+def reader_creator(num_batchs):
+    def reader():
+        iter_step = 0
+        while True:
+            if iter_step >= num_batchs:
+                break
+            iter_step += 1
+            x = np.empty((2, num_classes, 3, height_width, height_width), dtype=np.float32)
+            for class_idx in range(num_classes):
+                examples_for_class = class_idx_to_train_idxs[class_idx]
+                anchor_idx = random.choice(examples_for_class)
+                positive_idx = random.choice(examples_for_class)
+                while positive_idx == anchor_idx:
+                    positive_idx = random.choice(examples_for_class)
+                x[0, class_idx] = x_train[anchor_idx]
+                x[1, class_idx] = x_train[positive_idx]
+            yield x
+
+    return reader
+
+def anchor_positive_pairs(num_batchs=100):
+    return reader_creator(num_batchs)
+
+pairs_train_reader = anchor_positive_pairs(num_batchs=1000)
 ```
-- 经过测试，测试指令为
+# 4、模型组网：
+把图片转换为高维的向量表示的网络
+目标是首先把图片转换为高维空间的表示，然后计算图片在高维空间表示时的相似度。 下面的网络结构用来把一个形状为(3, 32, 32)的图片转换成形状为(8,)的向量。在有些资料中也会把这个转换成的向量称为Embedding，请注意，这与自然语言处理领域的词向量的区别。 下面的模型由三个连续的卷积加一个全局均值池化，然后用一个线性全链接层映射到维数为8的向量空间。为了后续计算余弦相似度时的便利，还在最后做了归一化。（即，余弦相似度的分母部分）
 ```python
-python -c "import paddle; paddle.utils.run_check()"
+class MyNet(paddle.nn.Layer):
+    def __init__(self):
+        super(MyNet, self).__init__()
+
+        self.conv1 = paddle.nn.Conv2D(in_channels=3, 
+                                      out_channels=32, 
+                                      kernel_size=(3, 3),
+                                      stride=2)
+         
+        self.conv2 = paddle.nn.Conv2D(in_channels=32, 
+                                      out_channels=64, 
+                                      kernel_size=(3,3), 
+                                      stride=2)       
+        
+        self.conv3 = paddle.nn.Conv2D(in_channels=64, 
+                                      out_channels=128, 
+                                      kernel_size=(3,3),
+                                      stride=2)
+       
+        self.gloabl_pool = paddle.nn.AdaptiveAvgPool2D((1,1))
+
+        self.fc1 = paddle.nn.Linear(in_features=128, out_features=8)
+    
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = self.conv3(x)
+        x = F.relu(x)
+        x = self.gloabl_pool(x)
+        x = paddle.squeeze(x, axis=[2, 3])
+        x = self.fc1(x)
+        x = x / paddle.norm(x, axis=1, keepdim=True)
+        return x
 ```
-环境有效。
+# 5、模型训练：
+```python
+def train(model):
+    print('start training ... ')
+    model.train()
 
-## 2.3、安装对比分析
+    inverse_temperature = paddle.to_tensor(np.array([1.0/0.2], dtype='float32'))
 
-Pytorch的分布式环境在曙光平台安装时需要手动源码编译torchversion，这个过程比较慢，这一点上pytorch相对比较繁琐；但是pytorch的环境在曙光平台比较稳定，而paddlepaddle环境在曙光平台不太稳定。
+    epoch_num = 20
+    
+    opt = paddle.optimizer.Adam(learning_rate=0.0001,
+                                parameters=model.parameters())
+    
+    for epoch in range(epoch_num):
+        for batch_id, data in enumerate(pairs_train_reader()):
+            anchors_data, positives_data = data[0], data[1]
 
-# 3、Paddle单机与分布式：
+            anchors = paddle.to_tensor(anchors_data)
+            positives = paddle.to_tensor(positives_data)
+            
+            anchor_embeddings = model(anchors)
+            positive_embeddings = model(positives)
+            
+            similarities = paddle.matmul(anchor_embeddings, positive_embeddings, transpose_y=True) 
+            similarities = paddle.multiply(similarities, inverse_temperature)
+            
+            sparse_labels = paddle.arange(0, num_classes, dtype='int64')
 
-## 3.1、paddle单机
+            loss = F.cross_entropy(similarities, sparse_labels)
+            
+            if batch_id % 500 == 0:
+                print("epoch: {}, batch_id: {}, loss is: {}".format(epoch, batch_id, loss.numpy()))
+            loss.backward()
+            opt.step()
+            opt.clear_grad()
 
-在图像处理中，关键点本质上是一种特征。它是对一个固定区域或者空间物理关系的抽象描述，描述的是一定邻域范围内的组合或上下文关系。它不仅仅是一个点信息，或代表一个位置，更代表着上下文与周围邻域的组合关系。关键点检测的目标就是通过计算机从图像中找出这些点的坐标，作为计算机视觉领域的一个基础任务，关键点的检测对于高级别任务，例如识别和分类具有至关重要的意义。任务选用的是人脸关键点检测，采用的方法是坐标点回归的方式进行，参考paddlepaddle网址如下：
-https://www.paddlepaddle.org.cn/documentation/docs/zh/practices/cv/landmark_detection.html
+model = MyNet()
+train(model)
+```
+
+# 6、模型预测：
+前述的模型训练训练结束之后，就可以用该网络结构来计算出任意一张图片的高维向量表示（embedding)，通过计算该图片与图片库中其他图片的高维向量表示之间的相似度，就可以按照相似程度进行排序，排序越靠前，则相似程度越高。
+
+下面对测试集中所有的图片都两两计算相似度，然后选一部分相似的图片展示出来。
+
+```python
+near_neighbours_per_example = 10
+
+x_test_t = paddle.to_tensor(x_test)
+test_images_embeddings = model(x_test_t)
+similarities_matrix = paddle.matmul(test_images_embeddings, test_images_embeddings, transpose_y=True) 
+
+indicies = paddle.argsort(similarities_matrix, descending=True)
+indicies = indicies.numpy()
+
+examples = np.empty(
+    (
+        num_classes,
+        near_neighbours_per_example + 1,
+        3,
+        height_width,
+        height_width,
+    ),
+    dtype=np.float32,
+)
+
+for row_idx in range(num_classes):
+    examples_for_class = class_idx_to_test_idxs[row_idx]
+    anchor_idx = random.choice(examples_for_class)
+    
+    examples[row_idx, 0] = x_test[anchor_idx]
+    anchor_near_neighbours = indicies[anchor_idx][1:near_neighbours_per_example+1]
+    for col_idx, nn_idx in enumerate(anchor_near_neighbours):
+        examples[row_idx, col_idx + 1] = x_test[nn_idx]
+
+show_collage(examples)
+```
+# 7、使用 paddle.jit.to_static 实现动转静：
+飞桨推荐使用 @paddle.jit.to_static 实现动转静，也被称为基于源代码转写的动态图转静态图，其基本原理是通过分析 Python 代码来将动态图代码转写为静态图代码，并在底层自动使用执行器运行，使用起来非常方便，只需要在原网络结构的 forward 前添加一个装饰器 paddle.jit.to_static 即可。
+
+## 7.1、改写组网代码
+```python
+class MyNet2(paddle.nn.Layer):
+    def __init__(self):
+        super(MyNet2, self).__init__()
+
+        self.conv1 = paddle.nn.Conv2D(in_channels=3, 
+                                      out_channels=32, 
+                                      kernel_size=(3, 3),
+                                      stride=2)
+         
+        self.conv2 = paddle.nn.Conv2D(in_channels=32, 
+                                      out_channels=64, 
+                                      kernel_size=(3,3), 
+                                      stride=2)       
+        
+        self.conv3 = paddle.nn.Conv2D(in_channels=64, 
+                                      out_channels=128, 
+                                      kernel_size=(3,3),
+                                      stride=2)
+       
+        self.gloabl_pool = paddle.nn.AdaptiveAvgPool2D((1,1))
+
+        self.fc1 = paddle.nn.Linear(in_features=128, out_features=8)
+    
+    # 在forward 前添加 paddle.jit.to_static 装饰器
+    @paddle.jit.to_static()
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = self.conv3(x)
+        x = F.relu(x)
+        x = self.gloabl_pool(x)
+        x = paddle.squeeze(x, axis=[2, 3])
+        x = self.fc1(x)
+        x = x / paddle.norm(x, axis=1, keepdim=True)
+        return x
+```
+通过 model.summary 查看网络结构。
+```python
+model_2 = MyNet2()
+model_info = paddle.summary(model_2, (10, 3, 32, 32))
+print(model_info)
+```
+-------------------------------------------------------------------------------
+   Layer (type)         Input Shape          Output Shape         Param #    
+===============================================================================
+     Conv2D-13       [[10, 3, 32, 32]]     [10, 32, 15, 15]         896      
+     Conv2D-14       [[10, 32, 15, 15]]     [10, 64, 7, 7]        18,496     
+     Conv2D-15        [[10, 64, 7, 7]]     [10, 128, 3, 3]        73,856     
+AdaptiveAvgPool2D-4  [[10, 128, 3, 3]]     [10, 128, 1, 1]           0       
+     Linear-5           [[10, 128]]            [10, 8]             1,032     
+===============================================================================
+Total params: 94,280
+Trainable params: 94,280
+Non-trainable params: 0
+-------------------------------------------------------------------------------
+Input size (MB): 0.12
+Forward/backward pass size (MB): 0.89
+Params size (MB): 0.36
+Estimated Total Size (MB): 1.36
+-------------------------------------------------------------------------------
+
+{'total_params': 94280, 'trainable_params': 94280}
+
+## 7.2、模型训练
+使用 paddle.jit.to_static 装饰器后，训练方式仍与原动态图训练一致。因此这里直接传入 model_2 完成模型的训练。
+```python
+train(model_2)
+```
+## 7.3、使用 paddle.jit.save 保存动转静模型
+使用 paddle.jit.to_static 转换模型后，需要调用 paddle.jit.save 将保存模型，以供后续的预测部署。保存后，会产生 model.pdmodel 、model.pdiparams.info、model.pdiparams 三个文件。
+```python
+paddle.jit.save(model_2, 'model')
+```
+## 7.4、使用 paddle.jit.load 加载动转静模型
+将模型导出后，需要使用 paddle.jit.load 加载模型。加载后的模型可以直接用于预测。
+```python
+model_2 = paddle.jit.load('model')
+```
+## 7.5、使用动转静模型
+前述的模型训练训练结束之后，就可以用该网络结构来计算出任意一张图片的高维向量表示（embedding)，通过计算该图片与图片库中其他图片的高维向量表示之间的相似度，就可以按照相似程度进行排序，排序越靠前，则相似程度越高。
+
+下面对测试集中所有的图片都两两计算相似度，然后选一部分相似的图片展示出来。
+```python
+near_neighbours_per_example = 10
+
+x_test_t = paddle.to_tensor(x_test)
+test_images_embeddings = model_2(x_test_t)
+similarities_matrix = paddle.matmul(test_images_embeddings, test_images_embeddings, transpose_y=True) 
+
+indicies = paddle.argsort(similarities_matrix, descending=True)
+indicies = indicies.numpy()
+
+examples = np.empty(
+    (
+        num_classes,
+        near_neighbours_per_example + 1,
+        3,
+        height_width,
+        height_width,
+    ),
+    dtype=np.float32,
+)
+
+for row_idx in range(num_classes):
+    examples_for_class = class_idx_to_test_idxs[row_idx]
+    anchor_idx = random.choice(examples_for_class)
+    
+    examples[row_idx, 0] = x_test[anchor_idx]
+    anchor_near_neighbours = indicies[anchor_idx][1:near_neighbours_per_example+1]
+    for col_idx, nn_idx in enumerate(anchor_near_neighbours):
+        examples[row_idx, col_idx + 1] = x_test[nn_idx]
+
+show_collage(examples)
+```
+通过上述的内容，就使用 @jit.to_static 完成了动转静并使用该模型进行了预测。
+```python
+
+```
+
+```python
+
+```
+
+```python
+
+```
 
 其思路如下：
 - 1、导入相关库
