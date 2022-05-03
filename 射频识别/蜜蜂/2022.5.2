@@ -743,9 +743,25 @@ show_collage(examples)
 ```
 通过上述的内容，就使用 @jit.to_static 完成了动转静并使用该模型进行了预测。
 * 总结：上述动态图转静态图的过程中，总体来说感觉还是可以的，总结了以下几个层面：
+
 - 1、接口层面：接口功能目前使用中覆盖了所有使用场景；InputSpec 指定信息也好用
 - 2、语法层面：语法支持方面尚未发现问题，我认为语法支持比较完备；控制流语法转换也比较流畅
-- 3、报错层面：有一些报错信息可读性差，还需上网查找解决方案；调试工具比较易用
+- 3、报错层面：报错信息可读性差比较好，比如：
+Traceback (most recent call last):
+  File "D:\Postgraduate\deep_learning\jiaoliu\pp\train.py", line 191, in <module>
+    indicies = paddle.argsort(similarities_matrix, descending=True)
+  File "F:\Users\ASUS\anaconda3\envs\paddlepaddle-gpu\lib\site-packages\paddle\tensor\search.py", line 92, in argsort
+    _, ids = _C_ops.argsort(x, 'axis', axis, 'descending', descending)
+SystemError: (Fatal) Operator argsort raises an struct paddle::memory::allocation::BadAlloc exception.
+The exception content is
+:ResourceExhaustedError: 
+
+Out of memory error on GPU 0. Cannot allocate 762.939697MB memory on GPU 0, 3.256321GB memory has been allocated and available memory is only 761.527736MB.
+
+Please check whether there is any other process using GPU 0.
+1. If yes, please stop them, or start PaddlePaddle on another GPU.
+2. If no, please decrease the batch size of your model. 
+但如果没有详细的提示信息还需上网查找解决方案；调试工具比较易用
 - 4、文档层面：从官方文档来说，动态图转静态图的示例文档感觉不太完善，例如paddle.jit.load等的API没有在使用指南的示例文档中展现，教程文档还有待完善，其他方面感觉内容比较详细丰富，具有较好的指导性
 - 5、意见建议：动态图转静态图的代码还是比较方便的，但对新手来说有一定难度，建议在使用指南中可以适当增加一些重点难点视频解说；有一些官网上的使用指南用于学习，但是有一些是在其使用指南中没有介绍的，例如数据集的拆分等这些需要自己去琢磨，可再丰富一下指南内容；使用指南中的方式或方法比较多的可以用序号组合一下，方便学习者更快的了解每种方式或方法的优缺点。
 
