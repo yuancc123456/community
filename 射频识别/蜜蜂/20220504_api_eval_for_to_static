@@ -1,3 +1,13 @@
+# 飞桨动静转换评估评估报告
+
+| 领域         |飞桨动静转换评估               |
+| ------------ | ------------------------------|
+| 提交作者     | 王源 袁闯闯                    |
+| 提交时间     | 2022-05-04                     |
+| 版本号       | V1.0                           |
+| 依赖飞桨版本 | paddlepaddle-gpu==2.2          |
+| 文件名       | 20220504_api_eval_for_to_static.md|
+
 # 1、任务描述：
 
 	飞桨框架于 2.0 正式版之后正式发布了动静转换@to_static功能，并在2.1、2.2 两个大版本中不断新增了各项功能，以及详细的使用文档和最佳实践教程（以图搜图）。在本任务中，我们希望你全面体验飞桨的动静转换@to_static功能，即参考飞桨官网 -> 使用指南 -> 动态图转静态 下的内容，体验动转静模型导出、动转静训练等功能，产出一份整体功能体验报告。
@@ -230,6 +240,9 @@ class MyNet(paddle.nn.Layer):
         return x
 ```
 # 5、模型训练：
+
+将epoch设置为10，进行模型训练
+
 ```python
 def train(model):
     print('start training ... ')
@@ -237,7 +250,7 @@ def train(model):
 
     inverse_temperature = paddle.to_tensor(np.array([1.0/0.2], dtype='float32'))
 
-    epoch_num = 20
+    epoch_num = 10
     
     opt = paddle.optimizer.Adam(learning_rate=0.0001,
                                 parameters=model.parameters())
@@ -269,46 +282,16 @@ model = MyNet()
 train(model)
 ```
 start training ... 
-epoch: 0, batch_id: 0, loss is: [2.280273]
-epoch: 0, batch_id: 500, loss is: [2.1605127]
-epoch: 1, batch_id: 0, loss is: [1.7533822]
-epoch: 1, batch_id: 500, loss is: [2.0081174]
-epoch: 2, batch_id: 0, loss is: [1.8109229]
-epoch: 2, batch_id: 500, loss is: [1.9905856]
-epoch: 3, batch_id: 0, loss is: [2.0454707]
-epoch: 3, batch_id: 500, loss is: [2.0010436]
-epoch: 4, batch_id: 0, loss is: [2.4154394]
-epoch: 4, batch_id: 500, loss is: [1.6455103]
-epoch: 5, batch_id: 0, loss is: [1.7919021]
-epoch: 5, batch_id: 500, loss is: [2.2331948]
-epoch: 6, batch_id: 0, loss is: [1.9466245]
-epoch: 6, batch_id: 500, loss is: [2.0904586]
-epoch: 7, batch_id: 0, loss is: [1.9153895]
-epoch: 7, batch_id: 500, loss is: [1.9260674]
-epoch: 8, batch_id: 0, loss is: [2.0014274]
-epoch: 8, batch_id: 500, loss is: [1.7430764]
-epoch: 9, batch_id: 0, loss is: [1.7972829]
-epoch: 9, batch_id: 500, loss is: [2.2068024]
-epoch: 10, batch_id: 0, loss is: [1.8178483]
-epoch: 10, batch_id: 500, loss is: [1.6445739]
-epoch: 11, batch_id: 0, loss is: [1.881571]
-epoch: 11, batch_id: 500, loss is: [1.6114471]
-epoch: 12, batch_id: 0, loss is: [1.8235717]
-epoch: 12, batch_id: 500, loss is: [1.8305904]
-epoch: 13, batch_id: 0, loss is: [2.3348408]
-epoch: 13, batch_id: 500, loss is: [1.8183334]
-epoch: 14, batch_id: 0, loss is: [2.267961]
-epoch: 14, batch_id: 500, loss is: [1.811522]
-epoch: 15, batch_id: 0, loss is: [1.8636084]
-epoch: 15, batch_id: 500, loss is: [1.9797341]
-epoch: 16, batch_id: 0, loss is: [2.0291398]
-epoch: 16, batch_id: 500, loss is: [1.9469869]
-epoch: 17, batch_id: 0, loss is: [1.7329595]
-epoch: 17, batch_id: 500, loss is: [1.4528174]
-epoch: 18, batch_id: 0, loss is: [1.5235187]
-epoch: 18, batch_id: 500, loss is: [1.5459623]
-epoch: 19, batch_id: 0, loss is: [1.7494917]
-epoch: 19, batch_id: 500, loss is: [1.8685908]
+epoch: 0, batch_id: 0, loss is: [2.2948632]
+epoch: 1, batch_id: 0, loss is: [2.2237694]
+epoch: 2, batch_id: 0, loss is: [2.298895]
+epoch: 3, batch_id: 0, loss is: [2.177363]
+epoch: 4, batch_id: 0, loss is: [2.137092]
+epoch: 5, batch_id: 0, loss is: [2.0598648]
+epoch: 6, batch_id: 0, loss is: [2.320207]
+epoch: 7, batch_id: 0, loss is: [2.2819552]
+epoch: 8, batch_id: 0, loss is: [2.2361653]
+epoch: 9, batch_id: 0, loss is: [2.2339714]
 
 # 6、模型预测：
 前述的模型训练训练结束之后，就可以用该网络结构来计算出任意一张图片的高维向量表示（embedding)，通过计算该图片与图片库中其他图片的高维向量表示之间的相似度，就可以按照相似程度进行排序，排序越靠前，则相似程度越高。
@@ -453,11 +436,11 @@ print(model_info)
 -------------------------------------------------------------------------------
    Layer (type)         Input Shape          Output Shape         Param #    
 ===============================================================================
-     Conv2D-13       [[10, 3, 32, 32]]     [10, 32, 15, 15]         896      
-     Conv2D-14       [[10, 32, 15, 15]]     [10, 64, 7, 7]        18,496     
-     Conv2D-15        [[10, 64, 7, 7]]     [10, 128, 3, 3]        73,856     
-AdaptiveAvgPool2D-4  [[10, 128, 3, 3]]     [10, 128, 1, 1]           0       
-     Linear-5           [[10, 128]]            [10, 8]             1,032     
+     Conv2D-4        [[10, 3, 32, 32]]     [10, 32, 15, 15]         896      
+     Conv2D-5        [[10, 32, 15, 15]]     [10, 64, 7, 7]        18,496     
+     Conv2D-6         [[10, 64, 7, 7]]     [10, 128, 3, 3]        73,856     
+AdaptiveAvgPool2D-2  [[10, 128, 3, 3]]     [10, 128, 1, 1]           0       
+     Linear-2           [[10, 128]]            [10, 8]             1,032     
 ===============================================================================
 Total params: 94,280
 Trainable params: 94,280
@@ -469,6 +452,7 @@ Params size (MB): 0.36
 Estimated Total Size (MB): 1.36
 -------------------------------------------------------------------------------
 
+
 {'total_params': 94280, 'trainable_params': 94280}
 
 ## 7.2、模型训练
@@ -476,7 +460,17 @@ Estimated Total Size (MB): 1.36
 ```python
 train(model_2)
 ```
-
+start training ... 
+epoch: 0, batch_id: 0, loss is: [2.2763135]
+epoch: 1, batch_id: 0, loss is: [2.2554145]
+epoch: 2, batch_id: 0, loss is: [2.3164747]
+epoch: 3, batch_id: 0, loss is: [2.2589164]
+epoch: 4, batch_id: 0, loss is: [2.3976164]
+epoch: 5, batch_id: 0, loss is: [2.4078438]
+epoch: 6, batch_id: 0, loss is: [2.2000902]
+epoch: 7, batch_id: 0, loss is: [2.214849]
+epoch: 8, batch_id: 0, loss is: [2.2082658]
+epoch: 9, batch_id: 0, loss is: [2.3489225]
 ## 7.3、动转静模型导出
 动转静模块是架在动态图与静态图的一个桥梁，旨在打破动态图模型训练与静态部署的鸿沟，消除部署时对模型代码的依赖，打通与预测端的交互逻辑。
 在处理逻辑上，动转静主要包含两个主要模块：
@@ -745,7 +739,7 @@ show_collage(examples)
 * 总结：上述动态图转静态图的过程中，总体来说感觉还是可以的，总结了以下几个层面：
 
 - 1、接口层面：接口功能目前使用中覆盖了所有使用场景；InputSpec 指定信息也好用
-- 2、语法层面：语法支持方面尚未发现问题，我认为语法支持比较完备；控制流语法转换也比较流畅
+- 2、语法层面：语法支持方面尚未发现问题，我认为语法支持比较完备，但是图片展示功能（show_collage(examples)）在运行时展示不出来；控制流语法转换比较流畅
 - 3、报错层面：报错信息可读性差比较好，比如：
 Traceback (most recent call last):
   File "D:\Postgraduate\deep_learning\jiaoliu\pp\train.py", line 191, in <module>
@@ -763,5 +757,8 @@ Please check whether there is any other process using GPU 0.
 2. If no, please decrease the batch size of your model. 
 但如果没有详细的提示信息还需上网查找解决方案；调试工具比较易用
 - 4、文档层面：从官方文档来说，动态图转静态图的示例文档感觉不太完善，例如paddle.jit.load等的API没有在使用指南的示例文档中展现，教程文档还有待完善，其他方面感觉内容比较详细丰富，具有较好的指导性
-- 5、意见建议：动态图转静态图的代码还是比较方便的，但对新手来说有一定难度，建议在使用指南中可以适当增加一些重点难点视频解说；有一些官网上的使用指南用于学习，但是有一些是在其使用指南中没有介绍的，例如数据集的拆分等这些需要自己去琢磨，可再丰富一下指南内容；使用指南中的方式或方法比较多的可以用序号组合一下，方便学习者更快的了解每种方式或方法的优缺点;paddle自带数据集太大，数据处理需消耗大量资源，使用起来不太方便，建议新增一些小的数据集。
+- 5、意见建议：动态图转静态图的代码还是比较方便的，但对新手来说有一定难度，建议在使用指南中可以适当增加一些重点难点视频解说；
+有一些官网上的使用指南用于学习，但是有一些是在其使用指南中没有介绍的，例如数据集的拆分等这些需要自己去琢磨，可再丰富一下指南内容；
+使用指南中的方式或方法比较多的可以用序号组合一下，方便学习者更快的了解每种方式或方法的优缺点;
+paddle自带数据集太大，数据处理需消耗大量资源，使用起来不太方便，建议新增一些小的数据集。
 
