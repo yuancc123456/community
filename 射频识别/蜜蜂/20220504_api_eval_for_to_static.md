@@ -83,28 +83,46 @@ from collections import defaultdict
 
 print(paddle.__version__)
 ```
+```python
 2.2.2
+```
 
 # 3、数据加载：
 
 ## 3.1、数据集介绍
 
 本示例采用 CIFAR-10 数据集。
+
 CIFAR-10 和 CIFAR-100 是8000 万个微小图像数据集的标记子集。它们由 Alex Krizhevsky、Vinod Nair 和 Geoffrey Hinton 收集。
+
 数据集分为五个训练批次和一个测试批次，每个批次有 10000 张图像。测试批次恰好包含来自每个类别的 1000 个随机选择的图像。训练批次包含随机顺序的剩余图像，
+
 但一些训练批次可能包含来自一个类的图像多于另一个。在它们之间，训练批次恰好包含来自每个类别的 5000 张图像。
+
 以下是数据集中的类：
-飞机										
-汽车										
-鸟										
-猫										
-鹿										
-狗										
-青蛙										
-马										
-船										
-卡车										
+
+飞机	
+
+汽车	
+
+鸟	
+
+猫
+
+鹿
+
+狗
+
+青蛙
+
+马
+
+船
+
+卡车
+
 这些类是完全互斥的。汽车和卡车之间没有重叠。“汽车”包括轿车、SUV 之类的东西。“卡车”只包括大卡车。两者都不包括皮卡车。
+
 数据集下载网址为：https://www.cs.toronto.edu/~kriz/cifar.html
 ```python
 import paddle.vision.transforms as T
