@@ -11,20 +11,24 @@
 # 1、任务描述：
 
 	飞桨框架于 2.0 正式版之后正式发布了动静转换@to_static功能，并在2.1、2.2 两个大版本中不断新增了各项功能，以及详细的使用文档和最佳实践教程（以图搜图）。
+	
 	在本任务中，我们希望你全面体验飞桨的动静转换@to_static功能，即参考飞桨官网 -> 使用指南 -> 动态图转静态 下的内容，体验动转静模型导出、动转静训练等功能，
+	
 	产出一份整体功能体验报告。
 
 # 2、环境配置：
 
 	因为需要体验飞桨paddlepaddle框架的动转静模型导出、动转静训练等功能，所以首先需要安装飞桨paddlepaddle框架，运行环境使用pycharm和anaconda。
+	
 	所以在进行PaddlePaddle安装之前应确保Anaconda软件环境已经正确安装。软件下载和安装参见Anaconda官网(https://www.anaconda.com/)。
+	
 	在已经正确安装Anaconda的情况下请按照下列步骤安装PaddlePaddle。
 
--Windows 7/8/10 专业版/企业版 (64bit)
+	-Windows 7/8/10 专业版/企业版 (64bit)
 
--GPU版本支持CUDA 10.1/10.2/11.2，且仅支持单卡
+	-GPU版本支持CUDA 10.1/10.2/11.2，且仅支持单卡
 
--conda 版本 4.8.3+ (64 bit)
+	-conda 版本 4.8.3+ (64 bit)
 
 ## 2.1、创建虚拟环境：
 
@@ -36,7 +40,7 @@ conda create -n paddle_env python=3.6
 ```
 如果您想使用的python版本为3.7:
 ```python
-	conda create -n paddle_env python=3.7
+conda create -n paddle_env python=3.7
 ```	
 如果您想使用的python版本为3.8:
 ```python
